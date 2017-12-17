@@ -89,14 +89,14 @@ static void recognize_sentence()
 
 void* do_recognize(void*)
 {
-    ///////////////////////////////
-    // std::string line;
-    // while(true)
-    // {
-    //     std::getline(std::cin, line);
-    //     q_in.emplace(line);
-    // }
-    ///////////////////////////////
+#ifdef USE_STDIN
+    std::string line;
+    while(true)
+    {
+        std::getline(std::cin, line);
+        q_in.emplace(line);
+    }
+#endif
 
     while(!signal_exit)
     {

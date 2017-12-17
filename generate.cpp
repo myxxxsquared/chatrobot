@@ -83,13 +83,13 @@ static void generate()
 
 void* do_generate(void*)
 {
-    ///////////////////////////////
-    // while(true)
-    // {
-    //     string_queue_use use{q_out};
-    //     std::cout<<*use<<std::endl;
-    // }
-    ///////////////////////////////
+#ifdef USE_STDOUT
+    while(true)
+    {
+        string_queue_use use{q_out};
+        std::cout<<*use<<std::endl;
+    }
+#endif
 
     while(!signal_exit)
         generate();

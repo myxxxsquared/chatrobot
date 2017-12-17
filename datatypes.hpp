@@ -9,7 +9,7 @@ constexpr int SAMPLE_FORMAT = paInt16;
 constexpr int SAMPLE_RATE = 16000;
 constexpr int FRAMES_PER_BUFFER = 3200;
 typedef unsigned short SAMPLE;
-constexpr int BUFFER_SIZE = SAMPLE_RATE*sizeof(SAMPLE);
+constexpr int BUFFER_SIZE = FRAMES_PER_BUFFER*sizeof(SAMPLE);
 
 struct BUFFER
 {

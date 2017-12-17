@@ -1,4 +1,7 @@
 
+#define USE_STDIN
+#define USE_STDOUT
+
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>

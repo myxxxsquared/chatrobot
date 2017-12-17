@@ -39,9 +39,11 @@ void init_audio()
         (void *)NULL);
     if(paNoError != err)
         throw "Pa_OpenStream() Failed.";
+#ifndef USE_STDIN
     err = Pa_StartStream(inputStream);
     if(paNoError != err)
         throw "Pa_StartStream() Failed.";
+#endif
 
     err = Pa_OpenStream(
         &outputStream,
@@ -54,9 +56,11 @@ void init_audio()
         (void *)NULL);
     if(paNoError != err)
         throw "Pa_OpenStream() Failed.";
+#ifndef USE_STDOUT
     err = Pa_StartStream(outputStream);
     if(paNoError != err)
         throw "Pa_StartStream() Failed.";
+#endif
 }
 
 void exit_audio()
