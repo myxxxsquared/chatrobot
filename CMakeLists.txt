@@ -9,13 +9,18 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 find_package(Portaudio REQUIRED)
 find_package(Threads REQUIRED)
+find_package(CURLpp REQUIRED)
+
+include(cotire)
 
 include_directories(
     ${PORTAUDIO_INCLUDE_DIRS}
-    "${CMAKE_SOURCE_DIR}/xf/include")
+    ${CURLPP_INCLUDE_DIR}
+    "${CMAKE_SOURCE_DIR}/3rdparty/xf/include"
+    "${CMAKE_SOURCE_DIR}/3rdparty/json")
 
 link_directories(
-    "${CMAKE_SOURCE_DIR}/xf/linux_x64/libs")
+    "${CMAKE_SOURCE_DIR}/3rdparty/xf/linux_x64/libs")
 
 add_executable(chatrobot
     main.cpp
@@ -25,12 +30,14 @@ add_executable(chatrobot
     dialog.cpp
     recognize.cpp
     generate.cpp
-    init_threads.cpp)
+    init_threads.cpp
+    init_xf.cpp)
 
 target_link_libraries(chatrobot
     ${PORTAUDIO_LIBRARIES}
     Threads::Threads
-    "msc")
+    "msc"
+    ${CURLPP_LIBRARY})
 
 if(MSVC)
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -43,3 +50,4 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
 endif()
 
+cotire(chatrobot)

@@ -8,6 +8,7 @@ volatile bool signal_exit = false;
 
 int main()
 {
+    init_xf();
     init_audio();
     init_threads();
 

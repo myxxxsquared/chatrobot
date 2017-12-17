@@ -24,6 +24,7 @@ extern string_queue q_in, q_out;
 void init_audio();
 void exit_audio();
 void init_threads();
+void init_xf();
 
 int recordCallback(
     const void *input, void *output,

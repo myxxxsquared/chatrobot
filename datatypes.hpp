@@ -80,6 +80,7 @@ public:
 template<typename T>
 class SAFE_DEQUE_USE
 {
+public:
     SAFE_DEQUE<T> &queue;
     bool vaild;
 
@@ -99,7 +100,15 @@ class SAFE_DEQUE_USE
 
     ~SAFE_DEQUE_USE()
     {
-        queue.end_use();
+        if(vaild)
+            release();
+    }
+
+    void release()
+    {
+        if(vaild)
+            queue.end_use();
+        vaild=false;
     }
 
     SAFE_DEQUE_USE(const SAFE_DEQUE_USE<T>&) = delete;
@@ -107,7 +116,7 @@ class SAFE_DEQUE_USE
 
     T& operator*()
     {
-        return queue->queue.front();
+        return queue.queue.front();
     }
 };
 
