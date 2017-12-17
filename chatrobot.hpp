@@ -1,6 +1,6 @@
 
-#define USE_STDIN
-#define USE_STDOUT
+//#define USE_STDIN
+//#define USE_STDOUT
 
 #include <cstdio>
 #include <cstring>

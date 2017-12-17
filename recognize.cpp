@@ -7,6 +7,12 @@
 
 #include <sstream>
 
+#include <sys/types.h>
+#include <unistd.h>
+
+static FILE* file_recognize[2];
+static char recognize_buffer[BUFFER_SIZE];
+
 static void recognize_sentence()
 {
     int errcode = MSP_SUCCESS;
@@ -24,12 +30,13 @@ static void recognize_sentence()
     while(true)
     {
         int ret;
+        int len = 0;
 
         {
-            frame_queue_use top{q_record};
+            fread(recognize_buffer, BUFFER_SIZE, 1, file_recognize[0]);
             ret = QISRAudioWrite(
                 session_id,
-                (*top).buffer,
+                recognize_buffer,
                 FRAMES_PER_BUFFER*sizeof(SAMPLE),
                 first ? MSP_AUDIO_SAMPLE_FIRST : MSP_AUDIO_SAMPLE_CONTINUE,
                 &ep_stat,
@@ -78,13 +85,54 @@ static void recognize_sentence()
             }
             break;
         }
+        len = 0;
+        fwrite(&len, sizeof(int), 1, file_recognize[1]);
+        fflush(file_recognize[1]);
     }
 
-    q_in.emplace(ss.str());
+    std::string str = ss.str();
+    int len = str.size() + 1;
+    fwrite(&len, sizeof(int), 1, file_recognize[1]);
+    fwrite(str.c_str(), len, 1, file_recognize[1]);
+    fflush(file_recognize[1]);
     printf("%s\n", ss.str().c_str());
 
     QISRSessionEnd(session_id, "END");
 
+}
+
+static void recognize_parent()
+{
+    while(true)
+    {
+        {
+            frame_queue_use top{q_record};
+            void* buffer = (*top).buffer;
+            fwrite(buffer, BUFFER_SIZE, 1, file_recognize[1]);
+            fflush(file_recognize[1]);
+        }
+        int len;
+        if(len)
+        {
+            char* text;
+            fread(&len, sizeof(int), 1, file_recognize[0]);
+            text = (char*)malloc(len);
+            fread(text, len, 1, file_recognize[0]);
+            q_in.emplace(std::string(text));
+            free(text);
+        }
+    }
+}
+
+static void recognize_child()
+{
+    int errcode = MSP_SUCCESS;
+    const char* login_params = "appid = 5a2e1454, work_dir = .";
+    errcode = MSPLogin(NULL, NULL, login_params);
+    if (MSP_SUCCESS != errcode)
+        throw "MSPLogin() failed.";
+    while(true)
+        recognize_sentence();
 }
 
 void* do_recognize(void*)
@@ -98,9 +146,24 @@ void* do_recognize(void*)
     }
 #endif
 
-    while(!signal_exit)
+    pid_t pid;
+    int pipe_recognize[2][2];
+    pipe(pipe_recognize[0]);
+    pipe(pipe_recognize[1]);
+
+    pid = fork();
+    if(pid == 0)
     {
-        recognize_sentence();
+        file_recognize[0] = fdopen(pipe_recognize[0][0], "r");
+        file_recognize[1] = fdopen(pipe_recognize[1][1], "w");
+        recognize_child();
     }
+    else
+    {
+        file_recognize[0] = fdopen(pipe_recognize[1][0], "r");
+        file_recognize[1] = fdopen(pipe_recognize[0][1], "w");
+        recognize_parent();
+    }
+
     return NULL;
 }

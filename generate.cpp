@@ -4,15 +4,30 @@
 #include "msp_cmn.h"
 #include "msp_errors.h"
 
+#include <sys/types.h>
+#include <unistd.h>
+
 static char tempbuffer[BUFFER_SIZE];
 static int tempbufferlen = 0;
 
+static FILE* file_generate[2];
+static char generate_buffer[BUFFER_SIZE];
+
 static void generate()
 {
+    int dummy = 0;
+    fwrite(&dummy, sizeof(int), 1, file_generate[1]);
+    fflush(file_generate[1]);
+    dummy = 1;
+
     std::string str;
     {
-        string_queue_use use{q_out};
-        str = *use;
+        int len;
+        fread(&len, sizeof(int), 1, file_generate[0]);
+        char* text = (char*)malloc(len);
+        fread(text, len, 1, file_generate[0]);
+        str = text;
+        free(text);
     }
 
     int ret = -1;
@@ -41,7 +56,9 @@ static void generate()
                     memcpy(tempbuffer+tempbufferlen, data, left_size);
                     audio_len -= left_size;
                     data += left_size;
-                    q_play.emplace(tempbuffer);
+                    fwrite(&dummy, sizeof(int), 1, file_generate[1]);
+                    fwrite(tempbuffer, BUFFER_SIZE, 1, file_generate[1]);
+                    fflush(file_generate[1]);
                     tempbufferlen = 0;
                 }
                 else
@@ -54,7 +71,9 @@ static void generate()
 
             while(audio_len > BUFFER_SIZE)
             {
-                q_play.emplace(data);
+                fwrite(&dummy, sizeof(int), 1, file_generate[1]);
+                fwrite(data, BUFFER_SIZE, 1, file_generate[1]);
+                fflush(file_generate[1]);
                 data += BUFFER_SIZE;
                 audio_len -= BUFFER_SIZE;
             }
@@ -75,10 +94,53 @@ static void generate()
     {
         memset(tempbuffer+tempbufferlen, 0, BUFFER_SIZE-tempbufferlen);
         tempbufferlen = 0;
-        q_play.emplace(tempbuffer);
+        fwrite(&dummy, sizeof(int), 1, file_generate[1]);
+        fwrite(tempbuffer, BUFFER_SIZE, 1, file_generate[1]);
+        fflush(file_generate[1]);
     }
     
     QTTSSessionEnd(sessionID, "END");
+}
+
+static void generate_child()
+{
+    int errcode = MSP_SUCCESS;
+    const char* login_params = "appid = 5a2e1454, work_dir = .";
+    errcode = MSPLogin(NULL, NULL, login_params);
+    if (MSP_SUCCESS != errcode)
+        throw "MSPLogin() failed.";
+    while(true)
+        generate();
+}
+
+static void generate_parent()
+{
+    {
+        int dummy;
+        fread(&dummy, sizeof(int), 1, file_generate[0]);
+    }
+    while(true)
+    {
+        std::string str;
+        {
+            string_queue_use use{q_out};
+            str = *use;
+        }
+        int len = str.size() + 1;
+        fwrite(&len, sizeof(int), 1, file_generate[1]);
+        fwrite(str.c_str(), len, 1, file_generate[1]);
+        fflush(file_generate[1]);
+
+        while(true)
+        {
+            int curr;
+            fread(&curr, sizeof(int), 1, file_generate[0]);
+            if(!curr)
+                break;
+            fread(generate_buffer, BUFFER_SIZE, 1, file_generate[0]);
+            q_play.emplace(generate_buffer);
+        }
+    }
 }
 
 void* do_generate(void*)
@@ -91,8 +153,27 @@ void* do_generate(void*)
     }
 #endif
 
-    while(!signal_exit)
-        generate();
+    pid_t pid;
+    int pipe_generate[2][2];
+    pipe(pipe_generate[0]);
+    pipe(pipe_generate[1]);
+
+    pid = fork();
+    if(pid == -1)
+        throw "";
+    if(pid == 0)
+    {
+        file_generate[0] = fdopen(pipe_generate[0][0], "r");
+        file_generate[1] = fdopen(pipe_generate[1][1], "w");
+        generate_child();
+    }
+    else
+    {
+        file_generate[0] = fdopen(pipe_generate[1][0], "r");
+        file_generate[1] = fdopen(pipe_generate[0][1], "w");
+        generate_parent();
+    }
+
 
     return NULL;
 }
