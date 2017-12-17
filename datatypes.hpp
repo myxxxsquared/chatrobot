@@ -87,7 +87,7 @@ public:
     SAFE_DEQUE_USE(SAFE_DEQUE<T>& q, bool tryget = false)
         : queue(q)
     {
-        if(tryget)
+        if(!tryget)
         {
             queue.begin_use();
             vaild=true;

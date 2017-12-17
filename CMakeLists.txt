@@ -14,10 +14,11 @@ find_package(CURLpp REQUIRED)
 include(cotire)
 
 include_directories(
-    ${PORTAUDIO_INCLUDE_DIRS}
-    ${CURLPP_INCLUDE_DIR}
     "${CMAKE_SOURCE_DIR}/3rdparty/xf/include"
-    "${CMAKE_SOURCE_DIR}/3rdparty/json")
+    "${CMAKE_SOURCE_DIR}/3rdparty/json"
+    "${CMAKE_SOURCE_DIR}/3rdparty/curlpp/include"
+    ${PORTAUDIO_INCLUDE_DIRS}
+    ${CURL_INCLUDE_DIRS})
 
 link_directories(
     "${CMAKE_SOURCE_DIR}/3rdparty/xf/linux_x64/libs")
@@ -31,13 +32,27 @@ add_executable(chatrobot
     recognize.cpp
     generate.cpp
     init_threads.cpp
-    init_xf.cpp)
+    init_xf.cpp
+    3rdparty/curlpp/src/curlpp/cURLpp.cpp
+    3rdparty/curlpp/src/curlpp/Easy.cpp
+    3rdparty/curlpp/src/curlpp/Exception.cpp
+    3rdparty/curlpp/src/curlpp/Form.cpp
+    3rdparty/curlpp/src/curlpp/Info.cpp
+    3rdparty/curlpp/src/curlpp/Multi.cpp
+    3rdparty/curlpp/src/curlpp/OptionBase.cpp
+    3rdparty/curlpp/src/curlpp/Options.cpp
+    3rdparty/curlpp/src/curlpp/internal/CurlHandle.cpp
+    3rdparty/curlpp/src/curlpp/internal/OptionList.cpp
+    3rdparty/curlpp/src/curlpp/internal/OptionSetter.cpp
+    3rdparty/curlpp/src/curlpp/internal/SList.cpp)
+
+message(${CURLPP_LIBRARY})
 
 target_link_libraries(chatrobot
     ${PORTAUDIO_LIBRARIES}
+    ${CURL_LIBRARIES}
     Threads::Threads
-    "msc"
-    ${CURLPP_LIBRARY})
+    "msc")
 
 if(MSVC)
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")

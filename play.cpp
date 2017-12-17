@@ -8,6 +8,14 @@ int playCallback(
     PaStreamCallbackFlags statusFlags,
     void *userData )
 {
-    memset(output, 0, sizeof(SAMPLE)*FRAMES_PER_BUFFER);
+    if(signal_exit)
+        return paComplete;
+    {
+        frame_queue_use use{q_play, true};
+        if(use.vaild)
+            memcpy(output, (*use).buffer, BUFFER_SIZE);
+        else
+            memset(output, 0, BUFFER_SIZE);
+    }
     return paContinue;
 }
