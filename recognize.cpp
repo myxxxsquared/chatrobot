@@ -33,7 +33,12 @@ static void recognize_sentence()
         int len = 0;
 
         {
-            fread(recognize_buffer, BUFFER_SIZE, 1, file_recognize[0]);
+            {
+                int dummy = 0;
+                fwrite(&dummy, sizeof(int), 1, file_recognize[1]);
+                fflush(file_recognize[1]);
+                fread(recognize_buffer, BUFFER_SIZE, 1, file_recognize[0]);
+            }
             ret = QISRAudioWrite(
                 session_id,
                 recognize_buffer,
@@ -85,14 +90,12 @@ static void recognize_sentence()
             }
             break;
         }
-        len = 0;
-        fwrite(&len, sizeof(int), 1, file_recognize[1]);
-        fflush(file_recognize[1]);
     }
 
     std::string str = ss.str();
     int len = str.size() + 1;
     fwrite(&len, sizeof(int), 1, file_recognize[1]);
+    fflush(file_recognize[1]);
     fwrite(str.c_str(), len, 1, file_recognize[1]);
     fflush(file_recognize[1]);
     printf("%s\n", ss.str().c_str());
@@ -105,21 +108,22 @@ static void recognize_parent()
 {
     while(true)
     {
+        int len;
+        fread(&len, sizeof(int), 1, file_recognize[0]);
+        if(len)
+        {
+            char* text;
+            text = (char*)malloc(len);
+            fread(text, len, 1, file_recognize[0]);
+            q_in.emplace(std::string(text));
+            free(text);
+        }
+        else
         {
             frame_queue_use top{q_record};
             void* buffer = (*top).buffer;
             fwrite(buffer, BUFFER_SIZE, 1, file_recognize[1]);
             fflush(file_recognize[1]);
-        }
-        int len;
-        if(len)
-        {
-            char* text;
-            fread(&len, sizeof(int), 1, file_recognize[0]);
-            text = (char*)malloc(len);
-            fread(text, len, 1, file_recognize[0]);
-            q_in.emplace(std::string(text));
-            free(text);
         }
     }
 }

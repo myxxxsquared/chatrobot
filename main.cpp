@@ -1,5 +1,6 @@
 
 #include "chatrobot.hpp"
+#include <unistd.h>
 
 frame_queue q_record, q_play;
 string_queue q_in, q_out;
@@ -20,7 +21,8 @@ int main()
         return -1;
     }
 
-    while(1);
+    while(1)
+        usleep(1000);
 
     exit_audio();
 }
