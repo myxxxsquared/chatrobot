@@ -1,6 +1,5 @@
 
-//#define USE_STDIN
-//#define USE_STDOUT
+#include "config.h"
 
 #include <cstdio>
 #include <cstring>
