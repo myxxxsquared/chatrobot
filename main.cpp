@@ -8,9 +8,17 @@ volatile bool signal_exit = false;
 
 int main()
 {
-    init_xf();
-    init_audio();
-    init_threads();
+    try
+    {
+        init_xf();
+        init_audio();
+        init_threads();
+    }
+    catch(const char* str)
+    {
+        printf("%s\n", str);
+        return -1;
+    }
 
     while(1);
 

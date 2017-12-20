@@ -21,7 +21,7 @@ include_directories(
     ${CURL_INCLUDE_DIRS})
 
 link_directories(
-    "${CMAKE_SOURCE_DIR}/3rdparty/xf/linux_x64/libs")
+    "${CMAKE_SOURCE_DIR}/3rdparty/xf/linux_arm/libs")
 
 add_executable(chatrobot
     main.cpp
