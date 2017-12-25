@@ -11,13 +11,12 @@ int main()
 {
     try
     {
-        init_xf();
         init_audio();
         init_threads();
     }
     catch(const char* str)
     {
-        printf("%s\n", str);
+        fprintf(stderr, "Error: %s\n", str);
         return -1;
     }
 

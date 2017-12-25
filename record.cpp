@@ -13,10 +13,10 @@ int recordCallback(
 
     if(frameCount != FRAMES_PER_BUFFER)
     {
-        fprintf(stderr, "unexcepted frames.");
+        fprintf(stderr, "unexcepted frames.\n");
         throw "unexcepted frames.";
     }
-    q_record.emplace(input);
+    q_record.emplace(input, 3);
 
     return paContinue;
 }

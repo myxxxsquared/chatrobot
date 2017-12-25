@@ -30,14 +30,13 @@ static void recognize_sentence()
     while(true)
     {
         int ret;
-        int len = 0;
 
         {
             {
                 int dummy = 0;
-                fwrite(&dummy, sizeof(int), 1, file_recognize[1]);
+                myfwrite(&dummy, sizeof(int), 1, file_recognize[1]);
                 fflush(file_recognize[1]);
-                fread(recognize_buffer, BUFFER_SIZE, 1, file_recognize[0]);
+                myfread(recognize_buffer, BUFFER_SIZE, 1, file_recognize[0]);
             }
             ret = QISRAudioWrite(
                 session_id,
@@ -50,7 +49,7 @@ static void recognize_sentence()
 
         if (MSP_SUCCESS != ret)
         {
-            printf("\nQISRAudioWrite failed! error code:%d\n", ret);
+            fprintf(stderr, "\nQISRAudioWrite failed! error code:%d\n", ret);
             throw "QISRAudioWrite failed";
         }
         first = false;
@@ -60,7 +59,7 @@ static void recognize_sentence()
             const char *rslt = QISRGetResult(session_id, &rec_stat, 0, &errcode);
             if (MSP_SUCCESS != errcode)
             {
-                printf("\nQISRGetResult failed! error code: %d\n", errcode);
+                fprintf(stderr, "\nQISRGetResult failed! error code: %d\n", errcode);
                 throw "QISRGetResult failed";
             }
             if (NULL != rslt)
@@ -74,7 +73,7 @@ static void recognize_sentence()
             errcode = QISRAudioWrite(session_id, NULL, 0, MSP_AUDIO_SAMPLE_LAST, &ep_stat, &rec_stat);
             if (MSP_SUCCESS != errcode)
             {
-                printf("\nQISRGetResult failed! error code: %d\n", errcode);
+                fprintf(stderr, "\nQISRGetResult failed! error code: %d\n", errcode);
                 throw "QISRGetResult failed";
             }
             while (MSP_REC_STATUS_COMPLETE != rec_stat) 
@@ -82,7 +81,7 @@ static void recognize_sentence()
                 const char *rslt = QISRGetResult(session_id, &rec_stat, 0, &errcode);
                 if (MSP_SUCCESS != errcode)
                 {
-                    printf("\nQISRGetResult failed, error code: %d\n", errcode);
+                    fprintf(stderr, "\nQISRGetResult failed, error code: %d\n", errcode);
                     throw "QISRGetResult failed";
                 }
                 if (NULL != rslt)
@@ -94,11 +93,11 @@ static void recognize_sentence()
 
     std::string str = ss.str();
     int len = str.size() + 1;
-    fwrite(&len, sizeof(int), 1, file_recognize[1]);
+    myfwrite(&len, sizeof(int), 1, file_recognize[1]);
     fflush(file_recognize[1]);
-    fwrite(str.c_str(), len, 1, file_recognize[1]);
+    myfwrite(str.c_str(), len, 1, file_recognize[1]);
     fflush(file_recognize[1]);
-    printf("%s\n", ss.str().c_str());
+    fprintf(stderr, "IN : %s\n", ss.str().c_str());
 
     QISRSessionEnd(session_id, "END");
 
@@ -109,12 +108,12 @@ static void recognize_parent()
     while(true)
     {
         int len;
-        fread(&len, sizeof(int), 1, file_recognize[0]);
+        myfread(&len, sizeof(int), 1, file_recognize[0]);
         if(len)
         {
             char* text;
             text = (char*)malloc(len);
-            fread(text, len, 1, file_recognize[0]);
+            myfread(text, len, 1, file_recognize[0]);
             q_in.emplace(std::string(text));
             free(text);
         }
@@ -122,7 +121,7 @@ static void recognize_parent()
         {
             frame_queue_use top{q_record};
             void* buffer = (*top).buffer;
-            fwrite(buffer, BUFFER_SIZE, 1, file_recognize[1]);
+            myfwrite(buffer, BUFFER_SIZE, 1, file_recognize[1]);
             fflush(file_recognize[1]);
         }
     }
@@ -152,8 +151,8 @@ void* do_recognize(void*)
 
     pid_t pid;
     int pipe_recognize[2][2];
-    pipe(pipe_recognize[0]);
-    pipe(pipe_recognize[1]);
+    if(pipe(pipe_recognize[0]) || pipe(pipe_recognize[1]))
+        throw "pipe error";
 
     pid = fork();
     if(pid == 0)

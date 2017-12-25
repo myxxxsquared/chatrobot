@@ -6,9 +6,9 @@
 
 void init_xf()
 {
-    // int errcode = MSP_SUCCESS;
-    // const char* login_params = "appid = 5a2e1454, work_dir = .";
-    // errcode = MSPLogin(NULL, NULL, login_params);
-    // if (MSP_SUCCESS != errcode)
-    //     throw "MSPLogin() failed.";
+    int errcode = MSP_SUCCESS;
+    const char* login_params = "appid = 5a2e1454, work_dir = .";
+    errcode = MSPLogin(NULL, NULL, login_params);
+    if (MSP_SUCCESS != errcode)
+        throw "MSPLogin() failed.";
 }

@@ -7,7 +7,8 @@
 constexpr int CHANNEL_COUNT = 1;
 constexpr int SAMPLE_FORMAT = paInt16;
 constexpr int SAMPLE_RATE = 16000;
-constexpr int FRAMES_PER_BUFFER = 3200;
+constexpr int FRAMES_PER_BUFFER = 1600;
+constexpr int RECORD_MULTIPLY = 3;
 typedef unsigned short SAMPLE;
 constexpr int BUFFER_SIZE = FRAMES_PER_BUFFER*sizeof(SAMPLE);
 
@@ -16,6 +17,15 @@ struct BUFFER
     SAMPLE buffer[FRAMES_PER_BUFFER];
     inline BUFFER() {}
     explicit inline BUFFER(const void* src) {memcpy(buffer, src, sizeof(buffer));}
+    inline BUFFER(const void* src, int mult) {
+        for(int i = 0; i < FRAMES_PER_BUFFER; ++i)
+            buffer[i] = ((SAMPLE*)src)[i*3];
+    }
+    explicit inline BUFFER(FILE* file)
+    {
+        if(fread(buffer, sizeof(SAMPLE)*FRAMES_PER_BUFFER, 1, file)!=1)
+            throw "Reading error.";
+    }
 };
 
 template<typename T>
@@ -125,3 +135,15 @@ typedef SAFE_DEQUE<BUFFER> frame_queue;
 typedef SAFE_DEQUE_USE<BUFFER> frame_queue_use;
 typedef SAFE_DEQUE<std::string> string_queue;
 typedef SAFE_DEQUE_USE<std::string> string_queue_use;
+
+inline void myfread(void* data, int size, int count, FILE* file)
+{
+    if((int)fread(data, size, count, file) != count)
+        throw "Reading Error!";
+}
+
+inline void myfwrite(const void* data, int size, int count, FILE* file)
+{
+    if((int)fwrite(data, size, count, file) != count)
+        throw "Writing Error!";
+}

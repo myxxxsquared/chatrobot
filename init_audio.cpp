@@ -13,11 +13,11 @@ void init_audio()
     PaStreamParameters input, output;
 
 #ifndef USE_STDIN
+    input.channelCount = CHANNEL_COUNT;
+    input.sampleFormat = SAMPLE_FORMAT;
     input.device = Pa_GetDefaultInputDevice();
     if(paNoDevice == input.device)
         throw "Pa_GetDefaultInputDevice() Failed.";
-    input.channelCount = CHANNEL_COUNT;
-    input.sampleFormat = SAMPLE_FORMAT;
     input.suggestedLatency = Pa_GetDeviceInfo(input.device)->defaultLowInputLatency;
     input.hostApiSpecificStreamInfo = NULL;
 
@@ -25,9 +25,9 @@ void init_audio()
         &inputStream,
         &input,
         NULL,
-        SAMPLE_RATE,
+        SAMPLE_RATE*RECORD_MULTIPLY,
         FRAMES_PER_BUFFER,
-        paClipOff,
+        paNoFlag,
         &recordCallback,
         (void *)NULL);
     if(paNoError != err)
@@ -37,12 +37,14 @@ void init_audio()
     if(paNoError != err)
         throw "Pa_StartStream() Failed.";
 #endif
+
+#ifndef USE_STDOUT
     output.device = Pa_GetDefaultOutputDevice();
     if(paNoDevice == output.device)
         throw "Pa_GetDefaultOutputDevice() Failed.";
     output.channelCount = CHANNEL_COUNT;
     output.sampleFormat = SAMPLE_FORMAT;
-    output.suggestedLatency = Pa_GetDeviceInfo(output.device)->defaultLowInputLatency;
+    output.suggestedLatency = Pa_GetDeviceInfo(output.device)->defaultLowOutputLatency;
     output.hostApiSpecificStreamInfo = NULL;
 
     err = Pa_OpenStream(
@@ -51,16 +53,17 @@ void init_audio()
         &output,
         SAMPLE_RATE,
         FRAMES_PER_BUFFER,
-        paClipOff,
+        paNoFlag,
         &playCallback,
         (void *)NULL);
     if(paNoError != err)
         throw "Pa_OpenStream() Failed.";
-#ifndef USE_STDOUT
     err = Pa_StartStream(outputStream);
     if(paNoError != err)
         throw "Pa_StartStream() Failed.";
 #endif
+
+    fprintf(stderr, "%lf, %lf\n", input.suggestedLatency, output.suggestedLatency);
 }
 
 void exit_audio()

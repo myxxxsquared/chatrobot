@@ -16,22 +16,24 @@ static char generate_buffer[BUFFER_SIZE];
 static void generate()
 {
     int dummy = 0;
-    fwrite(&dummy, sizeof(int), 1, file_generate[1]);
+    myfwrite(&dummy, sizeof(int), 1, file_generate[1]);
     fflush(file_generate[1]);
     dummy = 1;
 
     std::string str;
     {
         int len;
-        fread(&len, sizeof(int), 1, file_generate[0]);
+        myfread(&len, sizeof(int), 1, file_generate[0]);
         char* text = (char*)malloc(len);
-        fread(text, len, 1, file_generate[0]);
+        myfread(text, len, 1, file_generate[0]);
         str = text;
         free(text);
     }
 
+    fprintf(stderr, "OUT: %s\n", str.c_str());
+
     int ret = -1;
-    const char* params = "voice_name = xiaoyan, text_encoding = utf8, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 2";
+    const char* params = "voice_name = xiaofeng, text_encoding = utf8, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 2";
     const char* sessionID = QTTSSessionBegin(params, &ret);
     if (MSP_SUCCESS != ret)
         throw "QTTSSessionBegin() failed";
@@ -56,8 +58,8 @@ static void generate()
                     memcpy(tempbuffer+tempbufferlen, data, left_size);
                     audio_len -= left_size;
                     data += left_size;
-                    fwrite(&dummy, sizeof(int), 1, file_generate[1]);
-                    fwrite(tempbuffer, BUFFER_SIZE, 1, file_generate[1]);
+                    myfwrite(&dummy, sizeof(int), 1, file_generate[1]);
+                    myfwrite(tempbuffer, BUFFER_SIZE, 1, file_generate[1]);
                     fflush(file_generate[1]);
                     tempbufferlen = 0;
                 }
@@ -71,8 +73,8 @@ static void generate()
 
             while(audio_len > BUFFER_SIZE)
             {
-                fwrite(&dummy, sizeof(int), 1, file_generate[1]);
-                fwrite(data, BUFFER_SIZE, 1, file_generate[1]);
+                myfwrite(&dummy, sizeof(int), 1, file_generate[1]);
+                myfwrite(data, BUFFER_SIZE, 1, file_generate[1]);
                 fflush(file_generate[1]);
                 data += BUFFER_SIZE;
                 audio_len -= BUFFER_SIZE;
@@ -94,8 +96,8 @@ static void generate()
     {
         memset(tempbuffer+tempbufferlen, 0, BUFFER_SIZE-tempbufferlen);
         tempbufferlen = 0;
-        fwrite(&dummy, sizeof(int), 1, file_generate[1]);
-        fwrite(tempbuffer, BUFFER_SIZE, 1, file_generate[1]);
+        myfwrite(&dummy, sizeof(int), 1, file_generate[1]);
+        myfwrite(tempbuffer, BUFFER_SIZE, 1, file_generate[1]);
         fflush(file_generate[1]);
     }
     
@@ -117,7 +119,7 @@ static void generate_parent()
 {
     {
         int dummy;
-        fread(&dummy, sizeof(int), 1, file_generate[0]);
+        myfread(&dummy, sizeof(int), 1, file_generate[0]);
     }
     while(true)
     {
@@ -127,17 +129,17 @@ static void generate_parent()
             str = *use;
         }
         int len = str.size() + 1;
-        fwrite(&len, sizeof(int), 1, file_generate[1]);
-        fwrite(str.c_str(), len, 1, file_generate[1]);
+        myfwrite(&len, sizeof(int), 1, file_generate[1]);
+        myfwrite(str.c_str(), len, 1, file_generate[1]);
         fflush(file_generate[1]);
 
         while(true)
         {
             int curr;
-            fread(&curr, sizeof(int), 1, file_generate[0]);
+            myfread(&curr, sizeof(int), 1, file_generate[0]);
             if(!curr)
                 break;
-            fread(generate_buffer, BUFFER_SIZE, 1, file_generate[0]);
+            myfread(generate_buffer, BUFFER_SIZE, 1, file_generate[0]);
             q_play.emplace(generate_buffer);
         }
     }
@@ -149,14 +151,14 @@ void* do_generate(void*)
     while(true)
     {
         string_queue_use use{q_out};
-        std::cout<<*use<<std::endl;
+        printf("%s\n", (*use).c_str());
     }
 #endif
 
     pid_t pid;
     int pipe_generate[2][2];
-    pipe(pipe_generate[0]);
-    pipe(pipe_generate[1]);
+    if(pipe(pipe_generate[0]) || pipe(pipe_generate[1]))
+        throw "pipe error";
 
     pid = fork();
     if(pid == -1)
