@@ -197,14 +197,13 @@ int build_grammar(UserData *udata)
 static void recognize_sentence_offline(UserData *udata)
 {
     char asr_params[MAX_PARAMS_LEN]    = {NULL};
-    const char *rec_rslt               = NULL;
     const char *session_id             = NULL;
     const char *asr_audiof             = NULL;
-    int last_audio                     = 0;
-    int aud_stat                       = MSP_AUDIO_SAMPLE_CONTINUE;
+//    int last_audio                     = 0;
+//    int aud_stat                       = MSP_AUDIO_SAMPLE_CONTINUE;
     int ep_stat                        = MSP_EP_LOOKING_FOR_SPEECH;
     int rec_stat                       = MSP_REC_STATUS_INCOMPLETE;
-    int rss_status                     = MSP_REC_STATUS_INCOMPLETE;
+//    int rss_status                     = MSP_REC_STATUS_INCOMPLETE;
     int errcode                        = -1;
 
     //离线语法识别参数设置
