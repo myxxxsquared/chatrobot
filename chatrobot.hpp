@@ -17,6 +17,9 @@ using std::deque;
 
 #include "datatypes.hpp"
 
+#define DEFAULT_TOKEN "appid = 5a2e1454, work_dir = ."
+#define OFFLINE_TOKEN "appid = 5a491327, work_dir = ."
+
 extern PaStream *inputStream, *outputStream;
 extern volatile bool signal_exit;
 extern pthread_t thread_dialog, thread_recognize, thread_generate;
@@ -46,3 +49,6 @@ int playCallback(
 void* do_recognize(void*);
 void* do_dialog(void*);
 void* do_generate(void*);
+
+void init_threads_offline();
+void* do_recognize_offline(void*);

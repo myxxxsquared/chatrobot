@@ -9,3 +9,4 @@
 
 - portaudio
 - curl
+- curlpp

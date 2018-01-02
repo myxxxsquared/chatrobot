@@ -101,12 +101,41 @@ add_executable(chatrobot
     3rdparty/curlpp/src/curlpp/internal/OptionSetter.cpp
     3rdparty/curlpp/src/curlpp/internal/SList.cpp)
 
+add_executable(chatrobot_ofl
+        init_audio.cpp
+        record.cpp
+        play.cpp
+        dialog.cpp
+        recognize.cpp
+        generate.cpp
+        init_threads.cpp
+        init_xf.cpp
+        3rdparty/curlpp/src/curlpp/cURLpp.cpp
+        3rdparty/curlpp/src/curlpp/Easy.cpp
+        3rdparty/curlpp/src/curlpp/Exception.cpp
+        3rdparty/curlpp/src/curlpp/Form.cpp
+        3rdparty/curlpp/src/curlpp/Info.cpp
+        3rdparty/curlpp/src/curlpp/Multi.cpp
+        3rdparty/curlpp/src/curlpp/OptionBase.cpp
+        3rdparty/curlpp/src/curlpp/Options.cpp
+        3rdparty/curlpp/src/curlpp/internal/CurlHandle.cpp
+        3rdparty/curlpp/src/curlpp/internal/OptionList.cpp
+        3rdparty/curlpp/src/curlpp/internal/OptionSetter.cpp
+        3rdparty/curlpp/src/curlpp/internal/SList.cpp asr_main.cpp)
+
 target_link_libraries(chatrobot
     ${PORTAUDIO_LIBRARIES}
     ${CURL_LIBRARIES}
     Threads::Threads
     "msc")
 
+target_link_libraries(chatrobot_ofl
+        ${PORTAUDIO_LIBRARIES}
+        ${CURL_LIBRARIES}
+        Threads::Threads
+        "msc")
+
 set(CHATROBOT_SUPPORTED OFF)
 
 cotire(chatrobot)
+cotire(chatrobot_ofl)
